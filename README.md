@@ -3,6 +3,57 @@
 
 ---
 
+## ✨ Key Features
+
+*   **🤖 AI Date Planner**: Automatically generates personalized date plans based on your budget, energy level (Chill/Energetic), weather, and preferred vibe.
+*   **❤️ Emotion-Centric Budgeting**: Set budgets based on how you *feel* (Comfortable, Stretch, Pressure) rather than just numbers.
+*   **📅 Joint Calendar**: Visualize your shared dates and financial comfort zones.
+*   **📊 Review System**: Rate past dates to teach the AI your couple preferences.
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+*   Node.js
+*   npm or yarn
+
+### Installation
+
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/yourusername/amorly.git
+    cd amorly
+    ```
+
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+
+3.  Start the app:
+    ```bash
+    npx expo start
+    ```
+
+---
+
+## 🛠️ Tech Stack
+
+*   **Framework**: [React Native](https://reactnative.dev/) with [Expo](https://expo.dev/)
+*   **Language**: [TypeScript](https://www.typescriptlang.org/)
+*   **Navigation**: [Expo Router](https://docs.expo.dev/router/introduction/)
+*   **Styling**: StyleSheet (Vanilla React Native)
+*   **Fonts**: Google Fonts (Inter, Lato, Nunito, Outfit, Playfair Display)
+
+---
+
+## 📋 Documentation
+
+*   [**AI Features & Logic**](./AI.md) - Details on the AI planning algorithm and emotion modeling.
+*   [**Design Persona**](./PERSONA.md) - Design guidelines and the "Emma Hart" persona.
+
+---
+
 ## 1. Product Overview (What)
 
 * **Product Concept:** "Aligning values without having to talk about money."
