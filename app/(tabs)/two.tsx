@@ -1,11 +1,9 @@
 import BackgroundGradient from '@/components/BackgroundGradient';
-import MicroGoalCard from '@/components/MicroGoalCard';
 import { Text, View } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { useGoals } from '@/context/GoalContext';
-import { Link } from 'expo-router';
 import React, { useEffect } from 'react';
-import { Dimensions, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { Dimensions, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -20,7 +18,7 @@ const { width } = Dimensions.get('window');
 export default function HarmonyScreen() {
   // Emma Hart Design: Soft Pulse, like a heartbeat.
   const theme = Colors.light;
-  const { goals, toggleGoal } = useGoals();
+  const { goals, toggleGoal, dateSettings, updateDateSettings } = useGoals();
 
   const scale = useSharedValue(1);
 
@@ -58,25 +56,58 @@ export default function HarmonyScreen() {
         </View>
 
         <View style={styles.goalsContainer} transparent>
-          <Text style={styles.sectionTitle}>Shared Goals</Text>
-          {goals.map((goal) => (
-            <MicroGoalCard
-              key={goal.id}
-              title={goal.title}
-              description={goal.description}
-              isCompleted={goal.isCompleted}
-              onPress={() => toggleGoal(goal.id)}
-            />
-          ))}
+          <Text style={styles.sectionTitle}>Monthly Settings 🗓️</Text>
+          <View style={styles.settingsCard}>
+            <View style={styles.settingRow}>
+              <Text style={styles.settingLabel}>Monthly Budget</Text>
+              <View style={styles.settingInputContainer}>
+                <Text style={styles.currencyPrefix}>$</Text>
+                <TextInput
+                  style={styles.settingInput}
+                  value={dateSettings.monthlyBudget}
+                  keyboardType="numeric"
+                  onChangeText={(val) => updateDateSettings({ ...dateSettings, monthlyBudget: val })}
+                />
+              </View>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.settingRow}>
+              <Text style={styles.settingLabel}>Dates Per Month</Text>
+              <TextInput
+                style={[styles.settingInput, { textAlign: 'center', width: 60 }]}
+                value={dateSettings.datesPerMonth}
+                keyboardType="numeric"
+                onChangeText={(val) => updateDateSettings({ ...dateSettings, datesPerMonth: val })}
+              />
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.settingColumn}>
+              <Text style={styles.settingLabel}>Preferences & Constraints</Text>
+              <Text style={styles.settingSubLabel}>Select what matters to you both:</Text>
+
+              <View style={styles.tagsContainer}>
+                {['Outdoors 🌲', 'Art & Culture 🎨', 'Foodie 🍔', 'Relaxing 🧖', 'Active 🏃', 'Nightlife 🍸', 'Cheap & Cheerful 💸', 'Luxury 💎'].map((tag) => {
+                  const isSelected = dateSettings.userPreferences.includes(tag);
+                  return (
+                    <Pressable
+                      key={tag}
+                      style={[styles.tag, isSelected && styles.tagSelected]}
+                      onPress={() => {
+                        const newPrefs = isSelected
+                          ? dateSettings.userPreferences.filter(t => t !== tag)
+                          : [...(dateSettings.userPreferences || []), tag];
+                        updateDateSettings({ ...dateSettings, userPreferences: newPrefs });
+                      }}
+                    >
+                      <Text style={[styles.tagText, isSelected && styles.tagTextSelected]}>{tag}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          </View>
         </View>
       </ScrollView>
-
-      {/* Floating Action Button */}
-      <Link href="/modal" asChild>
-        <Pressable style={styles.fab}>
-          <Text style={styles.fabIcon}>+</Text>
-        </Pressable>
-      </Link>
     </View>
   );
 }
@@ -174,5 +205,90 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginLeft: 4,
     color: '#292524',
+  },
+  settingsCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    marginHorizontal: 4,
+  },
+  settingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  settingLabel: {
+    fontSize: 16,
+    fontFamily: 'Lato_400Regular',
+    color: '#57534E',
+  },
+  settingInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F4',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+  },
+  currencyPrefix: {
+    fontSize: 16,
+    color: '#A8A29E',
+    marginRight: 5,
+    fontFamily: 'Nunito_700Bold',
+  },
+  settingInput: {
+    fontSize: 18,
+    fontFamily: 'Nunito_700Bold',
+    color: '#292524',
+    backgroundColor: '#F5F5F4',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F5F5F4',
+    marginVertical: 10,
+  },
+  settingColumn: {
+    paddingVertical: 10,
+  },
+  settingSubLabel: {
+    fontSize: 12,
+    fontFamily: 'Lato_400Regular',
+    color: '#A8A29E',
+    marginBottom: 8,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 10,
+  },
+  tag: {
+    backgroundColor: '#F5F5F4',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E7E5E4',
+  },
+  tagSelected: {
+    backgroundColor: Colors.light.tint,
+    borderColor: Colors.light.tint,
+  },
+  tagText: {
+    fontSize: 14,
+    fontFamily: 'Nunito_700Bold',
+    color: '#57534E',
+  },
+  tagTextSelected: {
+    color: '#FFF',
   },
 });

@@ -1,7 +1,6 @@
 import { Text, View } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { Event, useEvent } from '@/context/EventContext';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Link } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet } from 'react-native';
 
@@ -73,10 +72,10 @@ export default function CalendarScreen() {
                 )}
             </ScrollView>
 
-            {/* FAB to Add Event */}
-            <Link href="/add-event" asChild>
+            {/* FAB to Add Event (Now used for AI Planner) */}
+            <Link href="/ai-planner" asChild>
                 <Pressable style={styles.fab}>
-                    <FontAwesome name="plus" size={24} color="#FFF" />
+                    <Text style={styles.fabIcon}>✨</Text>
                 </Pressable>
             </Link>
         </View>
@@ -186,9 +185,9 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 30,
         right: 20,
-        width: 56,
-        height: 56,
-        borderRadius: 28,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
         backgroundColor: Colors.light.tint,
         alignItems: 'center',
         justifyContent: 'center',
@@ -197,6 +196,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 5,
+    },
+    fabIcon: {
+        fontSize: 32,
+        color: '#FFF',
     },
     ratingText: {
         fontSize: 14,

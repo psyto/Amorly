@@ -8,10 +8,19 @@ export interface Goal {
     isCompleted: boolean;
 }
 
+export interface DateSettings {
+    monthlyBudget: string;
+    datesPerMonth: string;
+    preferredVibe: string; // 'Comfort', 'Adventure', 'Balanced'
+    userPreferences: string[]; // List of selected tags
+}
+
 interface GoalContextType {
     goals: Goal[];
+    dateSettings: DateSettings;
     addGoal: (title: string, amount: string, description: string) => void;
     toggleGoal: (id: string) => void;
+    updateDateSettings: (settings: DateSettings) => void;
 }
 
 const GoalContext = createContext<GoalContextType | undefined>(undefined);
@@ -41,6 +50,13 @@ export function GoalProvider({ children }: { children: ReactNode }) {
         },
     ]);
 
+    const [dateSettings, setDateSettings] = useState<DateSettings>({
+        monthlyBudget: '200',
+        datesPerMonth: '4',
+        preferredVibe: 'Balanced',
+        userPreferences: [],
+    });
+
     const addGoal = (title: string, amount: string, description: string) => {
         const newGoal: Goal = {
             id: Date.now().toString(),
@@ -59,8 +75,12 @@ export function GoalProvider({ children }: { children: ReactNode }) {
         }));
     }
 
+    const updateDateSettings = (settings: DateSettings) => {
+        setDateSettings(settings);
+    };
+
     return (
-        <GoalContext.Provider value={{ goals, addGoal, toggleGoal }}>
+        <GoalContext.Provider value={{ goals, dateSettings, addGoal, toggleGoal, updateDateSettings }}>
             {children}
         </GoalContext.Provider>
     );

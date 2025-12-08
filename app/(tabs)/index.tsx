@@ -148,6 +148,7 @@ export default function TabOneScreen() {
                 onValueChange={handleUserSlide}
                 partnerValue={partnerValue}
                 disabled={isResultVisible}
+                value={userRating}
               />
 
               {isResultVisible && (

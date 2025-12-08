@@ -29,11 +29,13 @@ export function EventProvider({ children }: { children: ReactNode }) {
 
     const addEvent = (title: string, price: string, date: string) => {
         const newEvent: Event = {
-            id: Date.now().toString(),
+            id: (Date.now() + Math.floor(Math.random() * 10000)).toString(), // Prevent duplicates
             title,
             price,
             date,
-            status: 'scheduled',
+            status: 'pending_review',
+            rating: 0,
+            matchResult: 'pending'
         };
         setEvents(prev => [...prev, newEvent]);
     };

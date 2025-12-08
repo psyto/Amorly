@@ -20,9 +20,10 @@ interface EmotionSliderProps {
     onValueChange?: (value: number) => void;
     partnerValue?: number | null; // 0-1, null = not yet responded
     disabled?: boolean;
+    value?: number; // Added to support controlled component / initialization
 }
 
-export default function EmotionSlider({ onValueChange, partnerValue = null, disabled = false }: EmotionSliderProps) {
+export default function EmotionSlider({ onValueChange, partnerValue = null, disabled = false, value = 0 }: EmotionSliderProps) {
     // Emma Hart Palette: Pastels
     const theme = Colors.light;
 
@@ -30,6 +31,16 @@ export default function EmotionSlider({ onValueChange, partnerValue = null, disa
     const partnerOffset = useSharedValue(0); // Ghost thumb position
     const isDragging = useSharedValue(false);
     const [currentLabel, setCurrentLabel] = useState('Comfortable');
+
+    // Initialize or Sync with external value
+    useEffect(() => {
+        // Only animate to value if not currently dragging to avoid fighting
+        if (!isDragging.value) {
+            const targetX = Math.max(0, Math.min(1, value)) * (SLIDER_WIDTH - THUMB_SIZE);
+            offset.value = withTiming(targetX, { duration: 500 });
+            updateLabel(targetX); // Ensure label matches
+        }
+    }, [value]);
 
     useEffect(() => {
         if (partnerValue !== null) {
@@ -45,11 +56,18 @@ export default function EmotionSlider({ onValueChange, partnerValue = null, disa
         if (progress < 0.25) setCurrentLabel('Casual ☕️');     // Was "Too Cheap"
         else if (progress < 0.75) setCurrentLabel('Spot On ✨'); // Was "Perfect"
         else setCurrentLabel('A Treat 🥂');                    // Was "Too Expensive"
+        // Note: We don't call onValueChange here during external updates to avoid loops, 
+        // usually onValueChange matches the 'value' prop anyway.
+    };
 
+    // Internal updater for gestures
+    const handleGestureUpdate = (x: number) => {
+        const progress = x / (SLIDER_WIDTH - THUMB_SIZE);
+        updateLabel(x);
         if (onValueChange) {
             onValueChange(Math.max(0, Math.min(1, progress)));
         }
-    };
+    }
 
     const pan = Gesture.Pan()
         .enabled(!disabled) // Disable gesture if disabled
@@ -57,8 +75,9 @@ export default function EmotionSlider({ onValueChange, partnerValue = null, disa
             isDragging.value = true;
         })
         .onUpdate((e) => {
-            offset.value = Math.max(0, Math.min(e.x - THUMB_SIZE / 2, SLIDER_WIDTH - THUMB_SIZE));
-            runOnJS(updateLabel)(offset.value);
+            const newX = Math.max(0, Math.min(e.x - THUMB_SIZE / 2, SLIDER_WIDTH - THUMB_SIZE));
+            offset.value = newX;
+            runOnJS(handleGestureUpdate)(newX);
         })
         .onFinalize(() => {
             isDragging.value = false;
