@@ -8,12 +8,12 @@ import { Pressable, StyleSheet } from 'react-native';
 
 export default function TabOneScreen() {
   // Emma Hart Design: Clean, Minimal, Warm.
-  const { getPendingReviewEvent, getNextScheduledEvent, rateEvent, saveDraftRating } = useEvent();
+  const { getPendingReviewEvent, getNextScheduledEvent, rateEvent, saveDraftRating, startReview } = useEvent();
   const [partnerValue, setPartnerValue] = useState<number | null>(null);
   const [statusText, setStatusText] = useState("Was it worth it?");
   const [isResultVisible, setIsResultVisible] = useState(false);
   const [userRating, setUserRating] = useState<number>(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<any>(null);
 
   // Logic: Show Pending Review first. If none, show Next Scheduled info.
   // Logic: Show Pending Review first. If none, show Next Scheduled info.
@@ -158,9 +158,16 @@ export default function TabOneScreen() {
               )}
             </>
           ) : (
-            <Text style={styles.question}>
-              {nextEvent ? "Check back after your date!" : "Plan a date to start alignment."}
-            </Text>
+            <View style={{ alignItems: 'center' }}>
+              <Text style={styles.question}>
+                {nextEvent ? "Have you completed this date?" : "Plan a date to start alignment."}
+              </Text>
+              {nextEvent && (
+                <Pressable style={styles.collectButton} onPress={() => startReview(nextEvent.id)}>
+                  <Text style={styles.collectButtonText}>Rate This Date 💖</Text>
+                </Pressable>
+              )}
+            </View>
           )}
         </View>
       </View>

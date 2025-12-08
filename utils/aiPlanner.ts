@@ -1,12 +1,16 @@
 
 import { Event } from '@/context/EventContext';
 
+export type MoodType = 'Energized' | 'Relaxed' | 'Romantic' | 'Adventurous' | 'Playful' | 'Cozy';
+export type InterestType = 'Food' | 'Nature' | 'Art' | 'Active' | 'Music' | 'Nightlife';
+
 export interface DatePlan {
     title: string;
     location: string;
     cost: string;
     tags: string[];
     description: string;
+    category: InterestType;
 }
 
 // Helper to get random item from array
@@ -25,8 +29,7 @@ const shuffle = <T>(arr: T[]): T[] => {
 // Expanded Mock Data
 interface DateIdea extends DatePlan {
     budgetTier: 'Low' | 'Mid' | 'High';
-    vibe: 'Comfort' | 'Adventure' | 'Romantic' | 'Chill';
-    energyLevel: 'Low' | 'High'; // Low = Chill, High = Energetic
+    moods: MoodType[];
     environment: 'Indoor' | 'Outdoor';
 }
 
@@ -38,9 +41,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$15.00",
         tags: ["Relaxing", "Nature", "Comfort"],
         description: "Simple pleasures are the best. Homemade sandwiches and fresh air.",
+        category: 'Nature',
         budgetTier: 'Low',
-        vibe: 'Comfort',
-        energyLevel: 'Low',
+        moods: ['Relaxed', 'Cozy', 'Romantic'],
         environment: 'Outdoor'
     },
     {
@@ -49,9 +52,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "Free",
         tags: ["Active", "Urban", "Creative"],
         description: "Explore the city's hidden murals. Great for photos and walking.",
+        category: 'Art',
         budgetTier: 'Low',
-        vibe: 'Adventure',
-        energyLevel: 'High',
+        moods: ['Adventurous', 'Energized'],
         environment: 'Outdoor'
     },
     {
@@ -60,9 +63,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "Free",
         tags: ["Romantic", "Nature", "Chill"],
         description: "Bring a blanket and a thermos of hot cocoa. Watch the stars together.",
+        category: 'Nature',
         budgetTier: 'Low',
-        vibe: 'Romantic',
-        energyLevel: 'Low',
+        moods: ['Romantic', 'Cozy', 'Relaxed'],
         environment: 'Outdoor'
     },
     {
@@ -71,9 +74,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$10.00",
         tags: ["Cozy", "Indoor", "Chill"],
         description: "Popcorn, snacks, and your favorite trilogy. Pajamas mandatory.",
+        category: 'Art', // Loosely art/entertainment
         budgetTier: 'Low',
-        vibe: 'Comfort',
-        energyLevel: 'Low',
+        moods: ['Cozy', 'Relaxed'],
         environment: 'Indoor'
     },
     {
@@ -82,9 +85,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "Free",
         tags: ["Romantic", "Nature", "Active"],
         description: "Walk barefoot in the sand as the sun goes down. Classic and perfect.",
+        category: 'Nature',
         budgetTier: 'Low',
-        vibe: 'Romantic',
-        energyLevel: 'Low',
+        moods: ['Romantic', 'Relaxed'],
         environment: 'Outdoor'
     },
     {
@@ -93,9 +96,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$25.00",
         tags: ["Culture", "Indoor", "Learning"],
         description: "Get cultured and discuss art or history. Often free for locals!",
+        category: 'Art',
         budgetTier: 'Low',
-        vibe: 'Chill',
-        energyLevel: 'Low',
+        moods: ['Relaxed', 'Cozy'],
         environment: 'Indoor'
     },
     {
@@ -104,9 +107,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$20.00",
         tags: ["Foodie", "Morning", "Active"],
         description: "Support local. Buy fresh ingredients and cook a meal together later.",
+        category: 'Food',
         budgetTier: 'Low',
-        vibe: 'Comfort',
-        energyLevel: 'High',
+        moods: ['Energized', 'Cozy'],
         environment: 'Outdoor'
     },
     {
@@ -115,9 +118,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$18.00",
         tags: ["Playful", "Indoor", "Chill"],
         description: "Sip lattes and get competitive with Scrabble or Catan.",
+        category: 'Food',
         budgetTier: 'Low',
-        vibe: 'Comfort',
-        energyLevel: 'Low',
+        moods: ['Playful', 'Cozy', 'Relaxed'],
         environment: 'Indoor'
     },
 
@@ -128,9 +131,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$70.00",
         tags: ["Classic", "Romantic", "Food"],
         description: "Candlelight, pasta, and wine. You can't go wrong with the classics.",
+        category: 'Food',
         budgetTier: 'Mid',
-        vibe: 'Romantic',
-        energyLevel: 'Low',
+        moods: ['Romantic', 'Cozy'],
         environment: 'Indoor'
     },
     {
@@ -139,9 +142,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$60.00",
         tags: ["Fun", "Active", "Playful"],
         description: "Unleash your inner child. Competitive fun is great for bonding.",
+        category: 'Active',
         budgetTier: 'Mid',
-        vibe: 'Adventure',
-        energyLevel: 'High',
+        moods: ['Playful', 'Energized', 'Adventurous'],
         environment: 'Indoor'
     },
     {
@@ -150,9 +153,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$90.00",
         tags: ["Creative", "Learning", "Fun"],
         description: "Get your hands dirty! Create a mug or bowl to keep forever.",
+        category: 'Art',
         budgetTier: 'Mid',
-        vibe: 'Adventure',
-        energyLevel: 'Low',
+        moods: ['Playful', 'Adventurous'],
         environment: 'Indoor'
     },
     {
@@ -161,9 +164,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$80.00",
         tags: ["Music", "Nightlife", "Classy"],
         description: "Smooth tunes and craft cocktails in an intimate setting.",
+        category: 'Music',
         budgetTier: 'Mid',
-        vibe: 'Romantic',
-        energyLevel: 'Low',
+        moods: ['Romantic', 'Relaxed', 'Nightlife'],
         environment: 'Indoor'
     },
     {
@@ -172,9 +175,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$40.00",
         tags: ["Nature", "Beautiful", "Chill"],
         description: "Wander through exotic plants and flowers. Very instagrammable.",
+        category: 'Nature',
         budgetTier: 'Mid',
-        vibe: 'Chill',
-        energyLevel: 'Low',
+        moods: ['Relaxed', 'Romantic'],
         environment: 'Outdoor'
     },
     {
@@ -183,9 +186,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$50.00",
         tags: ["Fun", "Nightlife", "Entertainment"],
         description: "Laughter is the best aphrodisiac. Catch a local set.",
+        category: 'Nightlife',
         budgetTier: 'Mid',
-        vibe: 'Adventure',
-        energyLevel: 'Low',
+        moods: ['Playful', 'Energized'],
         environment: 'Indoor'
     },
     {
@@ -194,9 +197,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$55.00",
         tags: ["Retro", "Active", "Fun"],
         description: "Classic date night. Rent the ugly shoes and aim for a strike.",
+        category: 'Active',
         budgetTier: 'Mid',
-        vibe: 'Comfort',
-        energyLevel: 'High',
+        moods: ['Playful', 'Energized'],
         environment: 'Indoor'
     },
     {
@@ -205,9 +208,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$85.00",
         tags: ["Classy", "Daytime", "Foodie"],
         description: "Sample a flight of local wines and learn about the process.",
+        category: 'Food',
         budgetTier: 'Mid',
-        vibe: 'Chill',
-        energyLevel: 'Low',
+        moods: ['Relaxed', 'Cozy'],
         environment: 'Indoor' // Often indoors or covered
     },
 
@@ -218,9 +221,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$250.00",
         tags: ["Fancy", "Foodie", "Experience"],
         description: "A culinary journey for the senses. Dress up and indulge.",
+        category: 'Food',
         budgetTier: 'High',
-        vibe: 'Romantic',
-        energyLevel: 'Low',
+        moods: ['Romantic', 'Adventurous'],
         environment: 'Indoor'
     },
     {
@@ -229,9 +232,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$300.00",
         tags: ["Pampering", "Chill", "Luxury"],
         description: "Ultimate relaxation. Massage, sauna, and zero worries.",
+        category: 'Nature', // Or Health/Wellness if we had it
         budgetTier: 'High',
-        vibe: 'Comfort',
-        energyLevel: 'Low',
+        moods: ['Relaxed', 'Cozy'],
         environment: 'Indoor'
     },
     {
@@ -240,9 +243,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$400.00",
         tags: ["Exciting", "View", "Once-in-a-lifetime"],
         description: "See the city from above. An unforgettable adrenaline rush.",
+        category: 'Active',
         budgetTier: 'High',
-        vibe: 'Adventure',
-        energyLevel: 'High',
+        moods: ['Adventurous', 'Energized'],
         environment: 'Outdoor'
     },
     {
@@ -251,9 +254,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$500.00",
         tags: ["Travel", "Romantic", "Escape"],
         description: "Pack a bag and escape reality for 48 hours.",
+        category: 'Nature', // Loose fit
         budgetTier: 'High',
-        vibe: 'Romantic',
-        energyLevel: 'Low',
+        moods: ['Romantic', 'Relaxed'],
         environment: 'Indoor'
     },
     {
@@ -262,9 +265,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$350.00",
         tags: ["Water", "Luxury", "Private"],
         description: "Cruise the harbor on your own private vessel. Sunset recommended.",
+        category: 'Active',
         budgetTier: 'High',
-        vibe: 'Adventure',
-        energyLevel: 'Low',
+        moods: ['Adventurous', 'Romantic', 'Relaxed'],
         environment: 'Outdoor'
     },
     {
@@ -273,9 +276,9 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$200.00",
         tags: ["Culture", "Fancy", "Nightout"],
         description: "Get dressed to the nines for a night of high culture.",
+        category: 'Art',
         budgetTier: 'High',
-        vibe: 'Romantic',
-        energyLevel: 'Low',
+        moods: ['Romantic', 'Cozy'],
         environment: 'Indoor'
     },
     {
@@ -284,29 +287,25 @@ const DATE_IDEAS: DateIdea[] = [
         cost: "$180.00",
         tags: ["Foodie", "Intimate", "Experience"],
         description: "Let the chef decide. Fresh fish flown in daily from Japan.",
+        category: 'Food',
         budgetTier: 'High',
-        vibe: 'Adventure',
-        energyLevel: 'Low',
+        moods: ['Adventurous', 'Romantic'],
         environment: 'Indoor'
     },
 ];
 
 export interface PlannerContext {
-    energy?: 'Chill' | 'Energetic';
-    weather?: 'Sunny' | 'Rainy';
+    mood?: MoodType;
+    interests?: InterestType[];
+    city?: string;
+    environment?: 'Indoor' | 'Outdoor' | 'Any';
     pastEvents?: Event[];
 }
-
-export const generateDatePlan = async (budget: number, myMood: number, partnerMood: number): Promise<DatePlan> => {
-    // Legacy single plan function
-    const plans = await generateMonthlyPlan(budget, 1, (myMood + partnerMood) / 2);
-    return plans[0];
-};
 
 export const generateMonthlyPlan = async (
     totalBudget: number,
     count: number,
-    compositeMood: number,
+    _compositeMood: number, // Legacy param, ignored
     context: PlannerContext = {}
 ): Promise<DatePlan[]> => {
     await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate AI thinking
@@ -318,51 +317,52 @@ export const generateMonthlyPlan = async (
     if (avgBudgetPerDate < 40) targetTier = 'Low';
     if (avgBudgetPerDate > 120) targetTier = 'High';
 
-    // 2. Score & Filter
-    // We score every idea. High score = higher chance of being picked.
-    // Filtering removes invalid options (e.g. Picnic in Rain).
+    console.log("Generating plan with context:", context);
 
+    // 2. Score & Filter
     let candidates = DATE_IDEAS.map(idea => {
         let score = 0;
 
         // --- Hard Filters / Penalties ---
 
-        // Weather
-        if (context.weather === 'Rainy' && idea.environment === 'Outdoor') {
-            return { ...idea, score: -100 }; // Exclude
-        }
-        if (context.weather === 'Sunny' && idea.environment === 'Outdoor') {
-            score += 2; // Boost outdoor when sunny
+        // Environment (Indoor/Outdoor)
+        if (context.environment && context.environment !== 'Any') {
+            if (context.environment !== idea.environment) {
+                return { ...idea, score: -100 }; // Exclude
+            }
         }
 
-        // Energy
-        if (context.energy === 'Chill' && idea.energyLevel === 'High') score -= 5;
-        if (context.energy === 'Energetic' && idea.energyLevel === 'Low') score -= 5;
-        if (context.energy === 'Chill' && idea.energyLevel === 'Low') score += 3;
-        if (context.energy === 'Energetic' && idea.energyLevel === 'High') score += 3;
+        // --- Matching Logic (Scoring) ---
 
-        // Budget Tier (Soft filter to allow mixing)
+        // Mood Match
+        if (context.mood && idea.moods.includes(context.mood)) {
+            score += 15;
+            // Bonus if it's the first mood in the list (primary vibe)
+            if (idea.moods[0] === context.mood) score += 5;
+        }
+
+        // Interests Match
+        if (context.interests && context.interests.length > 0) {
+            if (context.interests.includes(idea.category)) {
+                score += 10;
+            }
+        }
+
+        // Budget Tier (Soft filter)
         if (idea.budgetTier === targetTier) score += 10;
-        else if (Math.abs(getTierVal(idea.budgetTier) - getTierVal(targetTier)) === 1) score += 2; // Adjacent tier okay
-        else score -= 10; // Too far off
+        else if (Math.abs(getTierVal(idea.budgetTier) - getTierVal(targetTier)) === 1) score += 2;
+        else score -= 10;
 
         // --- Learning Layer (Past Events) ---
         if (context.pastEvents) {
             context.pastEvents.forEach(event => {
                 if (event.status === 'completed' && event.rating !== undefined) {
-                    // Try to match event title to idea title (ignoring "Date X:" prefix)
-                    // Or match tags?
-                    // Simple approach: Check if this idea shares tags with the rated event
-                    // We need to look up the original tags for the past event. 
-                    // Reverse lookup by title substring:
-                    const originalIdea = DATE_IDEAS.find(i => event.title.includes(i.title.split(' ')[0])); // Fuzzy match start
-
+                    const originalIdea = DATE_IDEAS.find(i => event.title.includes(i.title.split(' ')[0]));
                     if (originalIdea) {
-                        // Intersection of tags
                         const commonTags = idea.tags.filter(t => originalIdea.tags.includes(t));
                         if (commonTags.length > 0) {
-                            if (event.rating > 0.7) score += (2 * commonTags.length); // Boost similar
-                            if (event.rating < 0.4) score -= (2 * commonTags.length); // Penalize similar
+                            if (event.rating > 0.7) score += (2 * commonTags.length);
+                            if (event.rating < 0.4) score -= (2 * commonTags.length);
                         }
                     }
                 }
@@ -375,17 +375,15 @@ export const generateMonthlyPlan = async (
     // Remove excluded
     candidates = candidates.filter(c => c.score > -50);
 
-    // Sort by score desc, then shuffle top results to maintain variety
-    // We'll take the top 2x count, then shuffle and take top count
+    // Sort by score desc
     candidates.sort((a, b) => b.score - a.score);
 
     // Fallback if we filtered too much
     if (candidates.length < count) {
-        // Relax filters? Or just duplicates? 
-        // For now, duplicates allowed if desperate, or fill with generic
+        console.warn("Not enough matches found, adding randoms");
     }
 
-    const topPool = candidates.slice(0, Math.max(count, 10)); // Top 10 best matches
+    const topPool = candidates.slice(0, Math.max(count, 12)); // larger pool
     const selected = shuffle(topPool).slice(0, count);
 
     return selected.map((plan, index) => {

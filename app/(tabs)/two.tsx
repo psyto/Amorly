@@ -1,8 +1,9 @@
 import BackgroundGradient from '@/components/BackgroundGradient';
 import { Text, View } from '@/components/Themed';
 import Colors from '@/constants/Colors';
+import { useEvent } from '@/context/EventContext';
 import { useGoals } from '@/context/GoalContext';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Dimensions, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
 import Animated, {
   Easing,
@@ -19,8 +20,22 @@ export default function HarmonyScreen() {
   // Emma Hart Design: Soft Pulse, like a heartbeat.
   const theme = Colors.light;
   const { goals, toggleGoal, dateSettings, updateDateSettings } = useGoals();
+  const { events } = useEvent();
 
   const scale = useSharedValue(1);
+
+  // Calculate Monthly Vibe
+  const completedEvents = events.filter(e => e.status === 'completed' && e.rating !== undefined);
+  const monthlyVibe = useMemo(() => {
+    if (completedEvents.length === 0) return { text: "No Data Yet 🌱", color: "#A8A29E" };
+
+    const avgRating = completedEvents.reduce((acc, curr) => acc + (curr.rating || 0), 0) / completedEvents.length;
+
+    if (avgRating > 0.8) return { text: "Soulmates 💖", color: "#E11D48" };
+    if (avgRating > 0.6) return { text: "In Sync ✨", color: "#DB2777" };
+    if (avgRating > 0.4) return { text: "Growing 🌱", color: "#65A30D" };
+    return { text: "Needs Love ☕️", color: "#D97706" };
+  }, [completedEvents]);
 
   useEffect(() => {
     scale.value = withRepeat(
@@ -35,6 +50,7 @@ export default function HarmonyScreen() {
 
   const animatedBubbleStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
+    shadowColor: monthlyVibe.color,
   }));
 
   return (
@@ -44,15 +60,33 @@ export default function HarmonyScreen() {
       <ScrollView contentContainerStyle={styles.container} style={{ flex: 1 }}>
         <View style={styles.header} transparent>
           <Text style={styles.title}>Our Harmony</Text>
-          <Text style={styles.subtitle}>Current Vibe</Text>
+          <Text style={styles.subtitle}>Current Vibe ({completedEvents.length} dates)</Text>
         </View>
 
         <View style={styles.vibeContainer} transparent>
-          <Animated.View style={[styles.pulseBubble, animatedBubbleStyle]}>
+          <Animated.View style={[styles.pulseBubble, animatedBubbleStyle, { shadowColor: monthlyVibe.color }]}>
             <View style={styles.coreBubble}>
-              <Text style={styles.vibeText}>Synced 💖</Text>
+              <Text style={[styles.vibeText, { color: monthlyVibe.color }]}>{monthlyVibe.text}</Text>
             </View>
           </Animated.View>
+        </View>
+
+        <View style={styles.progressContainer}>
+          <View style={styles.progressHeader}>
+            <Text style={styles.progressTitle}>Monthly Goal Progress</Text>
+            <Text style={styles.progressCount}>{completedEvents.length} / {dateSettings.datesPerMonth} Dates</Text>
+          </View>
+          <View style={styles.progressBarBackground}>
+            <View
+              style={[
+                styles.progressBarFill,
+                { width: `${Math.min(100, (completedEvents.length / parseInt(dateSettings.datesPerMonth)) * 100)}%` }
+              ]}
+            />
+          </View>
+          {completedEvents.length >= parseInt(dateSettings.datesPerMonth) && (
+            <Text style={styles.progressSuccessText}>Goal Met! Great job aligning values! 🎉</Text>
+          )}
         </View>
 
         <View style={styles.goalsContainer} transparent>
@@ -243,52 +277,98 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_700Bold',
   },
   settingInput: {
-    fontSize: 18,
-    fontFamily: 'Nunito_700Bold',
     color: '#292524',
     backgroundColor: '#F5F5F4',
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
+  textAlign: 'center',
+},
+  progressContainer: {
+  width: '100%',
+  backgroundColor: '#FFF',
+  padding: 20,
+  borderRadius: 20,
+  marginBottom: 30,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 5,
+  marginHorizontal: 4,
+},
+  progressHeader: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  marginBottom: 10,
+  alignItems: 'center',
+},
+  progressTitle: {
+  fontFamily: 'Nunito_700Bold',
+  fontSize: 16,
+  color: '#292524',
+},
+  progressCount: {
+  fontFamily: 'Lato_700Bold',
+  fontSize: 14,
+  color: '#E11D48',
+},
+  progressBarBackground: {
+  height: 10,
+  backgroundColor: '#F5F5F4',
+  borderRadius: 5,
+  overflow: 'hidden',
+},
+  progressBarFill: {
+  height: '100%',
+  backgroundColor: '#E11D48',
+  borderRadius: 5,
+},
+  progressSuccessText: {
+  marginTop: 10,
+  fontFamily: 'Nunito_700Bold',
+  fontSize: 14,
+  color: '#15803D',
+  textAlign: 'center',
+},
   divider: {
-    height: 1,
-    backgroundColor: '#F5F5F4',
-    marginVertical: 10,
-  },
+  height: 1,
+  backgroundColor: '#F5F5F4',
+  marginVertical: 10,
+},
   settingColumn: {
-    paddingVertical: 10,
-  },
+  paddingVertical: 10,
+},
   settingSubLabel: {
-    fontSize: 12,
-    fontFamily: 'Lato_400Regular',
-    color: '#A8A29E',
-    marginBottom: 8,
-  },
+  fontSize: 12,
+  fontFamily: 'Lato_400Regular',
+  color: '#A8A29E',
+  marginBottom: 8,
+},
   tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 10,
-  },
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  gap: 10,
+  marginTop: 10,
+},
   tag: {
-    backgroundColor: '#F5F5F4',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#E7E5E4',
-  },
+  backgroundColor: '#F5F5F4',
+  paddingVertical: 8,
+  paddingHorizontal: 16,
+  borderRadius: 20,
+  borderWidth: 1,
+  borderColor: '#E7E5E4',
+},
   tagSelected: {
-    backgroundColor: Colors.light.tint,
-    borderColor: Colors.light.tint,
-  },
+  backgroundColor: Colors.light.tint,
+  borderColor: Colors.light.tint,
+},
   tagText: {
-    fontSize: 14,
-    fontFamily: 'Nunito_700Bold',
-    color: '#57534E',
-  },
+  fontSize: 14,
+  fontFamily: 'Nunito_700Bold',
+  color: '#57534E',
+},
   tagTextSelected: {
-    color: '#FFF',
-  },
+  color: '#FFF',
+},
 });

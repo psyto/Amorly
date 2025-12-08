@@ -28,10 +28,10 @@ export default function TabLayout() {
         }
       }}>
       <Tabs.Screen
-        name="index"
+        name="two"
         options={{
-          title: 'Dash',
-          tabBarIcon: ({ color }) => <TabBarIcon name="heart" color={color} />,
+          title: 'Goals',
+          tabBarIcon: ({ color }) => <TabBarIcon name="star" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -42,10 +42,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="index"
         options={{
-          title: 'Goals',
-          tabBarIcon: ({ color }) => <TabBarIcon name="star" color={color} />,
+          title: 'Dash',
+          tabBarIcon: ({ color }) => <TabBarIcon name="heart" color={color} />,
         }}
       />
     </Tabs>

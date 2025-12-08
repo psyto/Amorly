@@ -3,9 +3,10 @@ import EmotionInput from '@/components/AI/EmotionInput';
 import Colors from '@/constants/Colors';
 import { useEvent } from '@/context/EventContext';
 import { useGoals } from '@/context/GoalContext';
-import { DatePlan, generateMonthlyPlan } from '@/utils/aiPlanner';
-import { Stack, router } from 'expo-router';
+import { DatePlan, generateMonthlyPlan, PlannerContext } from '@/utils/aiPlanner';
+import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Activity, Heart, Moon, Music, Palette, Trees, Utensils } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -15,23 +16,19 @@ export default function AIPlannerScreen() {
     const [step, setStep] = useState<Step>('input');
     const [plans, setPlans] = useState<DatePlan[]>([]);
     const { addEvent, events } = useEvent();
-    const { dateSettings } = useGoals(); // Use settings from context
+    const { dateSettings } = useGoals();
 
-    const processGenerate = async (energy: 'Chill' | 'Energetic', weather: 'Sunny' | 'Rainy') => {
+    const processGenerate = async (context: PlannerContext) => {
         setStep('loading');
         try {
             const budget = parseFloat(dateSettings.monthlyBudget) || 200;
             const count = parseInt(dateSettings.datesPerMonth) || 4;
 
-            // Map preferredVibe to compositeMood
+            // Legacy compositeMood (still passed but mostly ignored by new logic)
             let compositeMood = 0.5;
-            if (dateSettings.preferredVibe === 'Adventure') compositeMood = 0.8;
-            else if (dateSettings.preferredVibe === 'Comfort') compositeMood = 0.2;
-            else compositeMood = 0.5;
 
             const results = await generateMonthlyPlan(budget, count, compositeMood, {
-                energy,
-                weather,
+                ...context,
                 pastEvents: events
             });
             setPlans(results);
@@ -44,7 +41,7 @@ export default function AIPlannerScreen() {
 
     const handleAcceptAll = () => {
         plans.forEach(plan => {
-            addEvent(plan.title, plan.cost.replace(/[^0-9.]/g, '') || '0', 'Upcoming');
+            addEvent(plan.title, plan.cost.replace(/[^0-9.]/g, '') || '0', 'Upcoming', 'scheduled');
         });
         router.back();
     };
@@ -54,55 +51,74 @@ export default function AIPlannerScreen() {
         setStep('input');
     };
 
+    // Helper to get icon for category
+    const getCategoryIcon = (category: string) => {
+        switch (category) {
+            case 'Food': return <Utensils size={16} color={Colors.light.tint} />;
+            case 'Nature': return <Trees size={16} color={Colors.light.tint} />;
+            case 'Art': return <Palette size={16} color={Colors.light.tint} />;
+            case 'Active': return <Activity size={16} color={Colors.light.tint} />;
+            case 'Music': return <Music size={16} color={Colors.light.tint} />;
+            case 'Nightlife': return <Moon size={16} color={Colors.light.tint} />;
+            default: return <Heart size={16} color={Colors.light.tint} />;
+        }
+    };
+
     return (
         <View style={styles.container}>
             <Stack.Screen options={{
                 headerShown: true,
-                title: 'Monthly Planner 🗓️',
+                title: 'AI Planner 🪄',
                 headerTransparent: false,
                 headerTintColor: '#4C0519',
-                headerStyle: { backgroundColor: '#FAFAF9' }
+                headerStyle: { backgroundColor: '#FAFAF9' },
+                headerShadowVisible: false,
             }} />
 
             <View style={styles.content}>
                 {step === 'input' && (
-                    <>
-                        <View style={styles.infoBanner}>
-                            <Text style={styles.infoText}>
-                                Planning {dateSettings.datesPerMonth} dates for ${dateSettings.monthlyBudget}/mo
-                            </Text>
-                        </View>
-                        <EmotionInput
-                            onGenerate={processGenerate}
-                        />
-                    </>
+                    <EmotionInput onGenerate={processGenerate} />
                 )}
 
                 {step === 'loading' && (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color={Colors.light.tint} />
-                        <Text style={styles.loadingText}>Planning your month... 💘</Text>
+                        <Text style={styles.loadingText}>Crafting your perfect month... 💘</Text>
                     </View>
                 )}
 
                 {step === 'proposal' && (
                     <ScrollView contentContainerStyle={styles.scrollContent}>
-                        <Text style={styles.headerLabel}>YOUR MONTHLY PLAN</Text>
+                        <Text style={styles.headerLabel}>YOUR PERSONALIZED PLAN</Text>
+
                         {plans.map((plan, index) => (
                             <View key={index} style={styles.miniCard}>
+                                <View style={styles.cardHeader}>
+                                    <View style={styles.categoryTag}>
+                                        {getCategoryIcon(plan.category)}
+                                        <Text style={styles.categoryText}>{plan.category}</Text>
+                                    </View>
+                                    <Text style={styles.miniCost}>{plan.cost}</Text>
+                                </View>
+
                                 <Text style={styles.miniTitle}>{plan.title}</Text>
-                                <Text style={styles.miniCost}>{plan.cost}</Text>
                                 <Text style={styles.miniDesc}>{plan.description}</Text>
+
+                                <View style={styles.tagsRow}>
+                                    {plan.tags.slice(0, 3).map(tag => (
+                                        <Text key={tag} style={styles.tag}>#{tag}</Text>
+                                    ))}
+                                </View>
                             </View>
                         ))}
 
                         <View style={styles.buttonsContainer}>
                             <Pressable style={styles.acceptButton} onPress={handleAcceptAll}>
-                                <Text style={styles.acceptButtonText}>Accept All ({dateSettings.datesPerMonth} Dates) 💖</Text>
+                                <Text style={styles.acceptButtonText}>Accept All ({plans.length} Dates) 💖</Text>
                             </Pressable>
 
                             <Pressable style={styles.retryButton} onPress={handleRetry}>
-                                <Text style={styles.retryButtonText}>Try Again 🔄</Text>
+                                <Text style={styles.retryButtonText}>Start Over 🔄</Text>
                             </Pressable>
                         </View>
                     </ScrollView>
@@ -121,15 +137,6 @@ const styles = StyleSheet.create({
     },
     content: {
         flex: 1,
-    },
-    infoBanner: {
-        backgroundColor: '#E7E5E4',
-        padding: 10,
-        alignItems: 'center',
-    },
-    infoText: {
-        fontFamily: 'Lato_700Bold',
-        color: '#57534E',
     },
     loadingContainer: {
         flex: 1,
@@ -158,30 +165,64 @@ const styles = StyleSheet.create({
     miniCard: {
         width: '100%',
         backgroundColor: '#FFF',
-        padding: 16,
-        borderRadius: 16,
-        marginBottom: 12,
+        padding: 20,
+        borderRadius: 24,
+        marginBottom: 16,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.05,
-        shadowRadius: 4,
+        shadowRadius: 12,
+        elevation: 3,
+        borderWidth: 1,
+        borderColor: '#F5F5F4',
     },
-    miniTitle: {
-        fontSize: 18,
-        fontFamily: 'Nunito_700Bold',
-        color: '#292524',
-        marginBottom: 4,
+    cardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
     },
-    miniCost: {
-        fontSize: 14,
+    categoryTag: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FFF1F2',
+        paddingVertical: 4,
+        paddingHorizontal: 10,
+        borderRadius: 12,
+        gap: 6,
+    },
+    categoryText: {
+        fontSize: 12,
         fontFamily: 'Lato_700Bold',
         color: Colors.light.tint,
+        textTransform: 'uppercase',
+    },
+    miniTitle: {
+        fontSize: 20,
+        fontFamily: 'PlayfairDisplay_700Bold',
+        color: '#292524',
         marginBottom: 8,
     },
+    miniCost: {
+        fontSize: 16,
+        fontFamily: 'Lato_700Bold',
+        color: '#57534E',
+    },
     miniDesc: {
-        fontSize: 14,
+        fontSize: 15,
         fontFamily: 'Lato_400Regular',
         color: '#78716C',
+        lineHeight: 22,
+        marginBottom: 12,
+    },
+    tagsRow: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    tag: {
+        fontSize: 12,
+        fontFamily: 'Nunito_700Bold',
+        color: '#A8A29E',
     },
     buttonsContainer: {
         width: '100%',

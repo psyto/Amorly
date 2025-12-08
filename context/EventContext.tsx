@@ -14,8 +14,9 @@ export interface Event {
 
 interface EventContextType {
     events: Event[];
-    addEvent: (title: string, price: string, date: string) => void;
+    addEvent: (title: string, price: string, date: string, status?: EventStatus) => void;
     markAsDone: (id: string) => void;
+    startReview: (id: string) => void;
     rateEvent: (id: string, rating: number, matchResult: string) => void;
     saveDraftRating: (id: string, rating: number, matchResult: string) => void;
     getPendingReviewEvent: () => Event | undefined;
@@ -27,13 +28,13 @@ const EventContext = createContext<EventContextType | undefined>(undefined);
 export function EventProvider({ children }: { children: ReactNode }) {
     const [events, setEvents] = useState<Event[]>([]); // Start fresh
 
-    const addEvent = (title: string, price: string, date: string) => {
+    const addEvent = (title: string, price: string, date: string, status: EventStatus = 'scheduled') => {
         const newEvent: Event = {
-            id: (Date.now() + Math.floor(Math.random() * 10000)).toString(), // Prevent duplicates
+            id: Date.now().toString(36) + Math.random().toString(36).substr(2, 9),
             title,
             price,
             date,
-            status: 'pending_review',
+            status,
             rating: 0,
             matchResult: 'pending'
         };
@@ -41,6 +42,12 @@ export function EventProvider({ children }: { children: ReactNode }) {
     };
 
     const markAsDone = (id: string) => {
+        setEvents(prev => prev.map(e =>
+            e.id === id ? { ...e, status: 'pending_review' } : e
+        ));
+    };
+
+    const startReview = (id: string) => {
         setEvents(prev => prev.map(e =>
             e.id === id ? { ...e, status: 'pending_review' } : e
         ));
@@ -67,6 +74,7 @@ export function EventProvider({ children }: { children: ReactNode }) {
             events,
             addEvent,
             markAsDone,
+            startReview,
             rateEvent,
             saveDraftRating,
             getPendingReviewEvent,
