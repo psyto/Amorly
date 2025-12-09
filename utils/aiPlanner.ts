@@ -398,26 +398,38 @@ export const generateMonthlyPlan = async (
             const planTitle = `Date ${index + 1}: ${plan.title.split(":")[0].trim()}`;
             
             // Foodカテゴリの場合のみレストラン検索
-            if (plan.category === 'Food' && context.city) {
+            if (plan.category === 'Food') {
+                // cityが設定されていない場合はデフォルト値を使用
+                const searchCity = context.city || 'San Francisco';
+                
                 try {
                     // プランの予算から感情評価値を逆算
                     const planBudget = parseFloat(plan.cost.replace(/[^0-9.]/g, '')) || avgBudgetPerDate;
                     const emotionValue = budgetToEmotion(planBudget, avgBudgetPerDate);
                     
+                    console.log('Searching restaurants for:', {
+                        category: plan.category,
+                        city: searchCity,
+                        budget: planBudget,
+                        emotionValue
+                    });
+                    
                     // レストラン検索
                     const restaurants = await searchRestaurantsByEmotion(
                         emotionValue,
                         planBudget,
-                        context.city,
+                        searchCity,
                         'Food',
                         context.pastEvents,
                         context.mood
                     );
                     
+                    console.log('Found restaurants:', restaurants.length);
+                    
                     return {
                         ...plan,
                         title: planTitle,
-                        restaurantOptions: restaurants,
+                        restaurantOptions: restaurants.length > 0 ? restaurants : undefined,
                         emotionValue
                     };
                 } catch (error) {

@@ -53,7 +53,7 @@ export default function EmotionInput({ onGenerate }: EmotionInputProps) {
             onGenerate({
                 mood: selectedMood,
                 interests: selectedInterests,
-                city: city || 'Local',
+                city: city || 'San Francisco', // デフォルト値を具体的な都市名に変更
                 environment
             });
         }

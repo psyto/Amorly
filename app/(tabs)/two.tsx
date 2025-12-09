@@ -26,6 +26,9 @@ export default function HarmonyScreen() {
 
   // Calculate Monthly Vibe
   const completedEvents = events.filter(e => e.status === 'completed' && e.rating !== undefined);
+  const scheduledEvents = events.filter(e => e.status === 'scheduled');
+  const totalPlannedDates = scheduledEvents.length + completedEvents.length;
+  
   const monthlyVibe = useMemo(() => {
     if (completedEvents.length === 0) return { text: "No Data Yet 🌱", color: "#A8A29E" };
 
@@ -35,7 +38,7 @@ export default function HarmonyScreen() {
     if (avgRating > 0.6) return { text: "In Sync ✨", color: "#DB2777" };
     if (avgRating > 0.4) return { text: "Growing 🌱", color: "#65A30D" };
     return { text: "Needs Love ☕️", color: "#D97706" };
-  }, [completedEvents]);
+  }, [events, completedEvents]);
 
   useEffect(() => {
     scale.value = withRepeat(
@@ -74,17 +77,19 @@ export default function HarmonyScreen() {
         <View style={styles.progressContainer}>
           <View style={styles.progressHeader}>
             <Text style={styles.progressTitle}>Monthly Goal Progress</Text>
-            <Text style={styles.progressCount}>{completedEvents.length} / {dateSettings.datesPerMonth} Dates</Text>
+            <Text style={styles.progressCount}>{totalPlannedDates} / {dateSettings.datesPerMonth || 4} Dates</Text>
           </View>
           <View style={styles.progressBarBackground}>
             <View
               style={[
                 styles.progressBarFill,
-                { width: `${Math.min(100, (completedEvents.length / parseInt(dateSettings.datesPerMonth)) * 100)}%` }
+                { 
+                  width: `${Math.min(100, (totalPlannedDates / Math.max(1, parseInt(dateSettings.datesPerMonth) || 4)) * 100)}%` 
+                }
               ]}
             />
           </View>
-          {completedEvents.length >= parseInt(dateSettings.datesPerMonth) && (
+          {totalPlannedDates >= parseInt(dateSettings.datesPerMonth || '4') && (
             <Text style={styles.progressSuccessText}>Goal Met! Great job aligning values! 🎉</Text>
           )}
         </View>
@@ -283,8 +288,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  textAlign: 'center',
-},
   progressContainer: {
   width: '100%',
   backgroundColor: '#FFF',

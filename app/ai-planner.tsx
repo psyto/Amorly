@@ -126,10 +126,12 @@ export default function AIPlannerScreen() {
                                 </View>
 
                                 {/* レストラン推薦セクション */}
-                                {plan.category === 'Food' && plan.restaurantOptions && plan.restaurantOptions.length > 0 && (
+                                {plan.category === 'Food' && (
                                     <View style={styles.restaurantSection}>
-                                        <Text style={styles.restaurantHeader}>Recommended Restaurants 🍽️</Text>
-                                        {plan.restaurantOptions.slice(0, 3).map((restaurant, restaurantIndex) => {
+                                        {plan.restaurantOptions && plan.restaurantOptions.length > 0 ? (
+                                            <>
+                                                <Text style={styles.restaurantHeader}>Recommended Restaurants 🍽️</Text>
+                                                {plan.restaurantOptions.slice(0, 3).map((restaurant, restaurantIndex) => {
                                             const isSelected = plan.selectedRestaurant?.placeId === restaurant.placeId;
                                             return (
                                                 <Pressable
@@ -174,6 +176,12 @@ export default function AIPlannerScreen() {
                                                 </Pressable>
                                             );
                                         })}
+                                            </>
+                                        ) : (
+                                            <Text style={styles.restaurantLoadingText}>
+                                                💡 Restaurant recommendations will appear here. Make sure to enter a city name in the planner.
+                                            </Text>
+                                        )}
                                     </View>
                                 )}
                             </View>
@@ -377,6 +385,14 @@ const styles = StyleSheet.create({
         fontFamily: 'Lato_400Regular',
         color: '#78716C',
         flex: 1,
+    },
+    restaurantLoadingText: {
+        fontSize: 13,
+        fontFamily: 'Lato_400Regular',
+        color: '#A8A29E',
+        textAlign: 'center',
+        fontStyle: 'italic',
+        paddingVertical: 8,
     },
     buttonsContainer: {
         width: '100%',
