@@ -6,6 +6,7 @@
 ## ✨ Key Features
 
 *   **🤖 AI Date Planner**: Automatically generates personalized date plans based on your budget, energy level (Chill/Energetic), weather, and preferred vibe.
+*   **🍽️ Emotion-Based Restaurant Recommendations**: For food-related dates, the app searches and recommends real restaurants based on your emotion ratings (Casual ☕️, Spot On ✨, A Treat 🥂) and learns from your past successful dates.
 *   **❤️ Emotion-Centric Budgeting**: Set budgets based on how you *feel* (Comfortable, Stretch, Pressure) rather than just numbers.
 *   **📅 Joint Calendar**: Visualize your shared dates and financial comfort zones.
 *   **📊 Review System**: Rate past dates to teach the AI your couple preferences.
@@ -44,6 +45,18 @@
 *   **Navigation**: [Expo Router](https://docs.expo.dev/router/introduction/)
 *   **Styling**: StyleSheet (Vanilla React Native)
 *   **Fonts**: Google Fonts (Inter, Lato, Nunito, Outfit, Playfair Display)
+*   **Restaurant API**: [Google Places API](https://developers.google.com/maps/documentation/places/web-service) (with mock data fallback for development)
+
+### 🔑 Environment Setup
+
+To enable real restaurant recommendations, set up a Google Places API key:
+
+1. Get your API key from [Google Cloud Console](https://console.cloud.google.com/google/maps-apis/credentials)
+2. Create a `.env` file in the root directory:
+   ```
+   EXPO_PUBLIC_GOOGLE_PLACES_API_KEY=your_api_key_here
+   ```
+3. The app will use mock restaurant data if no API key is provided (perfect for development)
 
 ---
 

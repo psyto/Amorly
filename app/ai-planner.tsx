@@ -4,9 +4,10 @@ import Colors from '@/constants/Colors';
 import { useEvent } from '@/context/EventContext';
 import { useGoals } from '@/context/GoalContext';
 import { DatePlan, generateMonthlyPlan, PlannerContext } from '@/utils/aiPlanner';
+import { getPriceLevelSymbol } from '@/utils/restaurantAPI';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Activity, Heart, Moon, Music, Palette, Trees, Utensils } from 'lucide-react-native';
+import { Activity, Check, Heart, MapPin, Moon, Music, Palette, Star, Trees, Utensils } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -39,9 +40,23 @@ export default function AIPlannerScreen() {
         }
     };
 
+    const handleSelectRestaurant = (planIndex: number, restaurantIndex: number) => {
+        const updatedPlans = [...plans];
+        if (updatedPlans[planIndex].restaurantOptions) {
+            updatedPlans[planIndex].selectedRestaurant = 
+                updatedPlans[planIndex].restaurantOptions![restaurantIndex];
+        }
+        setPlans(updatedPlans);
+    };
+
     const handleAcceptAll = () => {
         plans.forEach(plan => {
-            addEvent(plan.title, plan.cost.replace(/[^0-9.]/g, '') || '0', 'Upcoming', 'scheduled');
+            // レストランが選択されている場合は、レストラン名をタイトルに追加
+            let eventTitle = plan.title;
+            if (plan.selectedRestaurant) {
+                eventTitle = `${plan.title} at ${plan.selectedRestaurant.name}`;
+            }
+            addEvent(eventTitle, plan.cost.replace(/[^0-9.]/g, '') || '0', 'Upcoming', 'scheduled');
         });
         router.back();
     };
@@ -91,8 +106,8 @@ export default function AIPlannerScreen() {
                     <ScrollView contentContainerStyle={styles.scrollContent}>
                         <Text style={styles.headerLabel}>YOUR PERSONALIZED PLAN</Text>
 
-                        {plans.map((plan, index) => (
-                            <View key={index} style={styles.miniCard}>
+                        {plans.map((plan, planIndex) => (
+                            <View key={planIndex} style={styles.miniCard}>
                                 <View style={styles.cardHeader}>
                                     <View style={styles.categoryTag}>
                                         {getCategoryIcon(plan.category)}
@@ -109,6 +124,58 @@ export default function AIPlannerScreen() {
                                         <Text key={tag} style={styles.tag}>#{tag}</Text>
                                     ))}
                                 </View>
+
+                                {/* レストラン推薦セクション */}
+                                {plan.category === 'Food' && plan.restaurantOptions && plan.restaurantOptions.length > 0 && (
+                                    <View style={styles.restaurantSection}>
+                                        <Text style={styles.restaurantHeader}>Recommended Restaurants 🍽️</Text>
+                                        {plan.restaurantOptions.slice(0, 3).map((restaurant, restaurantIndex) => {
+                                            const isSelected = plan.selectedRestaurant?.placeId === restaurant.placeId;
+                                            return (
+                                                <Pressable
+                                                    key={restaurant.placeId}
+                                                    style={[
+                                                        styles.restaurantCard,
+                                                        isSelected && styles.restaurantCardSelected
+                                                    ]}
+                                                    onPress={() => handleSelectRestaurant(planIndex, restaurantIndex)}
+                                                >
+                                                    <View style={styles.restaurantInfo}>
+                                                        <View style={styles.restaurantHeaderRow}>
+                                                            <Text style={styles.restaurantName}>{restaurant.name}</Text>
+                                                            {isSelected && (
+                                                                <View style={styles.selectedBadge}>
+                                                                    <Check size={14} color="#FFF" />
+                                                                </View>
+                                                            )}
+                                                        </View>
+                                                        <View style={styles.restaurantMeta}>
+                                                            <View style={styles.ratingRow}>
+                                                                <Star size={14} color="#F59E0B" fill="#F59E0B" />
+                                                                <Text style={styles.restaurantRating}>
+                                                                    {restaurant.rating.toFixed(1)} ({restaurant.userRatingsTotal} reviews)
+                                                                </Text>
+                                                            </View>
+                                                            <Text style={styles.restaurantPrice}>
+                                                                {getPriceLevelSymbol(restaurant.priceLevel)} • 
+                                                                ${restaurant.estimatedCost.toFixed(0)} for two
+                                                            </Text>
+                                                        </View>
+                                                        {restaurant.cuisine && (
+                                                            <Text style={styles.restaurantCuisine}>{restaurant.cuisine}</Text>
+                                                        )}
+                                                        <View style={styles.restaurantAddressRow}>
+                                                            <MapPin size={12} color="#78716C" />
+                                                            <Text style={styles.restaurantAddress} numberOfLines={1}>
+                                                                {restaurant.address}
+                                                            </Text>
+                                                        </View>
+                                                    </View>
+                                                </Pressable>
+                                            );
+                                        })}
+                                    </View>
+                                )}
                             </View>
                         ))}
 
@@ -223,6 +290,93 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontFamily: 'Nunito_700Bold',
         color: '#A8A29E',
+    },
+    restaurantSection: {
+        marginTop: 16,
+        paddingTop: 16,
+        borderTopWidth: 1,
+        borderTopColor: '#F5F5F4',
+    },
+    restaurantHeader: {
+        fontSize: 14,
+        fontFamily: 'Nunito_700Bold',
+        color: '#57534E',
+        marginBottom: 12,
+    },
+    restaurantCard: {
+        backgroundColor: '#FAFAF9',
+        borderRadius: 12,
+        padding: 12,
+        marginBottom: 8,
+        borderWidth: 1,
+        borderColor: '#E7E5E4',
+    },
+    restaurantCardSelected: {
+        backgroundColor: '#FFF5F7',
+        borderColor: Colors.light.tint,
+        borderWidth: 2,
+    },
+    restaurantInfo: {
+        width: '100%',
+    },
+    restaurantHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 6,
+    },
+    restaurantName: {
+        fontSize: 16,
+        fontFamily: 'Nunito_700Bold',
+        color: '#292524',
+        flex: 1,
+    },
+    selectedBadge: {
+        backgroundColor: Colors.light.tint,
+        borderRadius: 10,
+        width: 20,
+        height: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: 8,
+    },
+    restaurantMeta: {
+        marginBottom: 6,
+    },
+    ratingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 4,
+        gap: 4,
+    },
+    restaurantRating: {
+        fontSize: 12,
+        fontFamily: 'Lato_400Regular',
+        color: '#57534E',
+    },
+    restaurantPrice: {
+        fontSize: 12,
+        fontFamily: 'Lato_700Bold',
+        color: '#78716C',
+    },
+    restaurantCuisine: {
+        fontSize: 11,
+        fontFamily: 'Lato_400Regular',
+        color: Colors.light.tint,
+        marginBottom: 4,
+        textTransform: 'capitalize',
+    },
+    restaurantAddressRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        marginTop: 4,
+    },
+    restaurantAddress: {
+        fontSize: 11,
+        fontFamily: 'Lato_400Regular',
+        color: '#78716C',
+        flex: 1,
     },
     buttonsContainer: {
         width: '100%',

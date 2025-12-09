@@ -1,5 +1,7 @@
 
 import { Event } from '@/context/EventContext';
+import { RestaurantData } from './types';
+import { searchRestaurantsByEmotion } from './restaurantAPI';
 
 export type MoodType = 'Energized' | 'Relaxed' | 'Romantic' | 'Adventurous' | 'Playful' | 'Cozy';
 export type InterestType = 'Food' | 'Nature' | 'Art' | 'Active' | 'Music' | 'Nightlife';
@@ -11,6 +13,10 @@ export interface DatePlan {
     tags: string[];
     description: string;
     category: InterestType;
+    // レストラン情報（Foodカテゴリの場合）
+    restaurantOptions?: RestaurantData[];
+    selectedRestaurant?: RestaurantData;
+    emotionValue?: number;
 }
 
 // Helper to get random item from array
@@ -386,13 +392,67 @@ export const generateMonthlyPlan = async (
     const topPool = candidates.slice(0, Math.max(count, 12)); // larger pool
     const selected = shuffle(topPool).slice(0, count);
 
-    return selected.map((plan, index) => {
-        return {
-            ...plan,
-            title: `Date ${index + 1}: ${plan.title.split(":")[0].trim()}`
-        };
-    });
+    // プラン生成後、Foodカテゴリのプランに対してレストラン検索
+    const plansWithRestaurants = await Promise.all(
+        selected.map(async (plan, index) => {
+            const planTitle = `Date ${index + 1}: ${plan.title.split(":")[0].trim()}`;
+            
+            // Foodカテゴリの場合のみレストラン検索
+            if (plan.category === 'Food' && context.city) {
+                try {
+                    // プランの予算から感情評価値を逆算
+                    const planBudget = parseFloat(plan.cost.replace(/[^0-9.]/g, '')) || avgBudgetPerDate;
+                    const emotionValue = budgetToEmotion(planBudget, avgBudgetPerDate);
+                    
+                    // レストラン検索
+                    const restaurants = await searchRestaurantsByEmotion(
+                        emotionValue,
+                        planBudget,
+                        context.city,
+                        'Food',
+                        context.pastEvents,
+                        context.mood
+                    );
+                    
+                    return {
+                        ...plan,
+                        title: planTitle,
+                        restaurantOptions: restaurants,
+                        emotionValue
+                    };
+                } catch (error) {
+                    console.error('Error searching restaurants:', error);
+                    // エラーが発生してもプランは返す（レストラン情報なし）
+                    return {
+                        ...plan,
+                        title: planTitle
+                    };
+                }
+            }
+            
+            return {
+                ...plan,
+                title: planTitle
+            };
+        })
+    );
+
+    return plansWithRestaurants;
 };
+
+/**
+ * 予算から感情評価値を逆算
+ */
+function budgetToEmotion(planBudget: number, avgBudget: number): number {
+    if (avgBudget === 0) return 0.5; // デフォルト
+    
+    const ratio = planBudget / avgBudget;
+    
+    if (ratio < 0.7) return 0.2;   // Casual
+    if (ratio < 1.3) return 0.5;   // Spot On
+    if (ratio < 2.0) return 0.8;   // A Treat
+    return 0.95;                   // Premium Treat
+}
 
 const getTierVal = (t: string) => {
     if (t === 'Low') return 1;
