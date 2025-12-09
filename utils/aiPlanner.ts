@@ -445,7 +445,7 @@ export const generateMonthlyPlan = async (
         })
     );
 
-    return plansWithRestaurants;
+    return plansWithPlaces;
 };
 
 /**

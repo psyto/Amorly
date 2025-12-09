@@ -144,7 +144,7 @@ export default function AIPlannerScreen() {
                                             const isSelected = (plan.selectedPlace || plan.selectedRestaurant)?.placeId === place.placeId;
                                             return (
                                                 <Pressable
-                                                    key={restaurant.placeId}
+                                                    key={place.placeId}
                                                     style={[
                                                         styles.restaurantCard,
                                                         isSelected && styles.restaurantCardSelected

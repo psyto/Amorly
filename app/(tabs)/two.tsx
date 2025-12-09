@@ -29,9 +29,21 @@ export default function HarmonyScreen() {
     const filtered = events.filter(e => {
       // Event must be completed AND have a valid rating (including 0)
       const isCompleted = e.status === 'completed';
-      const hasRating = e.rating !== undefined && e.rating !== null;
-      return isCompleted && hasRating;
+      // ratingが0の場合も有効な評価として扱う
+      const hasRating = typeof e.rating === 'number' && e.rating >= 0;
+      const result = isCompleted && hasRating;
+      if (isCompleted) {
+        console.log('Checking completed event:', { 
+          id: e.id, 
+          status: e.status, 
+          rating: e.rating, 
+          hasRating, 
+          result 
+        });
+      }
+      return result;
     });
+    console.log('Filtered completed events:', filtered.length, filtered.map(e => ({ id: e.id, rating: e.rating })));
     return filtered;
   }, [events]);
 
@@ -117,19 +129,21 @@ export default function HarmonyScreen() {
         <View style={styles.progressContainer}>
           <View style={styles.progressHeader}>
             <Text style={styles.progressTitle}>Monthly Goal Progress</Text>
-            <Text style={styles.progressCount}>{totalPlannedDates} / {dateSettings.datesPerMonth || 4} Dates</Text>
+            <Text style={styles.progressCount}>
+              {completedEvents.length} / {dateSettings.datesPerMonth || 4} Dates
+            </Text>
           </View>
           <View style={styles.progressBarBackground}>
             <View
               style={[
                 styles.progressBarFill,
                 { 
-                  width: `${Math.min(100, (totalPlannedDates / Math.max(1, parseInt(dateSettings.datesPerMonth) || 4)) * 100)}%` 
+                  width: `${Math.min(100, (completedEvents.length / Math.max(1, parseInt(dateSettings.datesPerMonth) || 4)) * 100)}%` 
                 }
               ]}
             />
           </View>
-          {totalPlannedDates >= parseInt(dateSettings.datesPerMonth || '4') && (
+          {completedEvents.length >= parseInt(dateSettings.datesPerMonth || '4') && (
             <Text style={styles.progressSuccessText}>Goal Met! Great job aligning values! 🎉</Text>
           )}
         </View>
