@@ -40,21 +40,24 @@ export default function AIPlannerScreen() {
         }
     };
 
-    const handleSelectRestaurant = (planIndex: number, restaurantIndex: number) => {
+    const handleSelectPlace = (planIndex: number, placeIndex: number) => {
         const updatedPlans = [...plans];
-        if (updatedPlans[planIndex].restaurantOptions) {
-            updatedPlans[planIndex].selectedRestaurant = 
-                updatedPlans[planIndex].restaurantOptions![restaurantIndex];
+        const plan = updatedPlans[planIndex];
+        const places = plan.placeOptions || plan.restaurantOptions;
+        if (places && places[placeIndex]) {
+            updatedPlans[planIndex].selectedPlace = places[placeIndex];
+            updatedPlans[planIndex].selectedRestaurant = places[placeIndex]; // 後方互換性
         }
         setPlans(updatedPlans);
     };
 
     const handleAcceptAll = () => {
         plans.forEach(plan => {
-            // レストランが選択されている場合は、レストラン名をタイトルに追加
+            // 場所が選択されている場合は、場所名をタイトルに追加
             let eventTitle = plan.title;
-            if (plan.selectedRestaurant) {
-                eventTitle = `${plan.title} at ${plan.selectedRestaurant.name}`;
+            const selectedPlace = plan.selectedPlace || plan.selectedRestaurant;
+            if (selectedPlace) {
+                eventTitle = `${plan.title} at ${selectedPlace.name}`;
             }
             addEvent(eventTitle, plan.cost.replace(/[^0-9.]/g, '') || '0', 'Upcoming', 'scheduled');
         });
@@ -125,14 +128,20 @@ export default function AIPlannerScreen() {
                                     ))}
                                 </View>
 
-                                {/* レストラン推薦セクション */}
-                                {plan.category === 'Food' && (
+                                {/* 場所推薦セクション（全カテゴリ対応） */}
+                                {(plan.placeOptions || plan.restaurantOptions) && (plan.placeOptions || plan.restaurantOptions)!.length > 0 && (
                                     <View style={styles.restaurantSection}>
-                                        {plan.restaurantOptions && plan.restaurantOptions.length > 0 ? (
-                                            <>
-                                                <Text style={styles.restaurantHeader}>Recommended Restaurants 🍽️</Text>
-                                                {plan.restaurantOptions.slice(0, 3).map((restaurant, restaurantIndex) => {
-                                            const isSelected = plan.selectedRestaurant?.placeId === restaurant.placeId;
+                                        <>
+                                            <Text style={styles.restaurantHeader}>
+                                                {plan.category === 'Food' && 'Recommended Restaurants 🍽️'}
+                                                {plan.category === 'Nature' && 'Recommended Places 🌲'}
+                                                {plan.category === 'Art' && 'Recommended Venues 🎨'}
+                                                {plan.category === 'Active' && 'Recommended Activities 🏃'}
+                                                {plan.category === 'Music' && 'Recommended Venues 🎵'}
+                                                {plan.category === 'Nightlife' && 'Recommended Spots 🍸'}
+                                            </Text>
+                                            {(plan.placeOptions || plan.restaurantOptions)!.slice(0, 3).map((place, placeIndex) => {
+                                            const isSelected = (plan.selectedPlace || plan.selectedRestaurant)?.placeId === place.placeId;
                                             return (
                                                 <Pressable
                                                     key={restaurant.placeId}
@@ -140,11 +149,11 @@ export default function AIPlannerScreen() {
                                                         styles.restaurantCard,
                                                         isSelected && styles.restaurantCardSelected
                                                     ]}
-                                                    onPress={() => handleSelectRestaurant(planIndex, restaurantIndex)}
+                                                    onPress={() => handleSelectPlace(planIndex, placeIndex)}
                                                 >
                                                     <View style={styles.restaurantInfo}>
                                                         <View style={styles.restaurantHeaderRow}>
-                                                            <Text style={styles.restaurantName}>{restaurant.name}</Text>
+                                                            <Text style={styles.restaurantName}>{place.name}</Text>
                                                             {isSelected && (
                                                                 <View style={styles.selectedBadge}>
                                                                     <Check size={14} color="#FFF" />
@@ -155,21 +164,31 @@ export default function AIPlannerScreen() {
                                                             <View style={styles.ratingRow}>
                                                                 <Star size={14} color="#F59E0B" fill="#F59E0B" />
                                                                 <Text style={styles.restaurantRating}>
-                                                                    {restaurant.rating.toFixed(1)} ({restaurant.userRatingsTotal} reviews)
+                                                                    {place.rating.toFixed(1)} ({place.userRatingsTotal} reviews)
                                                                 </Text>
                                                             </View>
-                                                            <Text style={styles.restaurantPrice}>
-                                                                {getPriceLevelSymbol(restaurant.priceLevel)} • 
-                                                                ${restaurant.estimatedCost.toFixed(0)} for two
-                                                            </Text>
+                                                            {plan.category === 'Food' && (
+                                                                <Text style={styles.restaurantPrice}>
+                                                                    {getPriceLevelSymbol(place.priceLevel)} • 
+                                                                    ${place.estimatedCost.toFixed(0)} for two
+                                                                </Text>
+                                                            )}
+                                                            {plan.category !== 'Food' && place.estimatedCost > 0 && (
+                                                                <Text style={styles.restaurantPrice}>
+                                                                    ${place.estimatedCost.toFixed(0)} for two
+                                                                </Text>
+                                                            )}
+                                                            {plan.category !== 'Food' && place.estimatedCost === 0 && (
+                                                                <Text style={styles.restaurantPrice}>Free</Text>
+                                                            )}
                                                         </View>
-                                                        {restaurant.cuisine && (
-                                                            <Text style={styles.restaurantCuisine}>{restaurant.cuisine}</Text>
+                                                        {place.cuisine && (
+                                                            <Text style={styles.restaurantCuisine}>{place.cuisine}</Text>
                                                         )}
                                                         <View style={styles.restaurantAddressRow}>
                                                             <MapPin size={12} color="#78716C" />
                                                             <Text style={styles.restaurantAddress} numberOfLines={1}>
-                                                                {restaurant.address}
+                                                                {place.address}
                                                             </Text>
                                                         </View>
                                                     </View>
@@ -177,11 +196,6 @@ export default function AIPlannerScreen() {
                                             );
                                         })}
                                             </>
-                                        ) : (
-                                            <Text style={styles.restaurantLoadingText}>
-                                                💡 Restaurant recommendations will appear here. Make sure to enter a city name in the planner.
-                                            </Text>
-                                        )}
                                     </View>
                                 )}
                             </View>

@@ -24,21 +24,61 @@ export default function HarmonyScreen() {
 
   const scale = useSharedValue(1);
 
-  // Calculate Monthly Vibe
-  const completedEvents = events.filter(e => e.status === 'completed' && e.rating !== undefined);
-  const scheduledEvents = events.filter(e => e.status === 'scheduled');
-  const totalPlannedDates = scheduledEvents.length + completedEvents.length;
+  // Calculate completed and scheduled events with useMemo to ensure reactivity
+  const completedEvents = useMemo(() => {
+    const filtered = events.filter(e => {
+      // Event must be completed AND have a valid rating (including 0)
+      const isCompleted = e.status === 'completed';
+      const hasRating = e.rating !== undefined && e.rating !== null;
+      return isCompleted && hasRating;
+    });
+    return filtered;
+  }, [events]);
+
+  const scheduledEvents = useMemo(() => {
+    return events.filter(e => e.status === 'scheduled');
+  }, [events]);
+
+  const totalPlannedDates = useMemo(() => {
+    return scheduledEvents.length + completedEvents.length;
+  }, [scheduledEvents.length, completedEvents.length]);
+
+  // Debug: Log events for troubleshooting
+  useEffect(() => {
+    console.log('=== Goals Screen Debug ===');
+    console.log('Total events:', events.length);
+    console.log('Completed events count:', completedEvents.length);
+    console.log('Scheduled events count:', scheduledEvents.length);
+    console.log('Total planned dates:', totalPlannedDates);
+    console.log('All events:', events.map(e => ({ 
+      id: e.id, 
+      status: e.status, 
+      rating: e.rating, 
+      matchResult: e.matchResult,
+      title: e.title 
+    })));
+    console.log('Completed events:', completedEvents.map(e => ({ 
+      id: e.id, 
+      rating: e.rating, 
+      matchResult: e.matchResult 
+    })));
+  }, [events, completedEvents, scheduledEvents, totalPlannedDates]);
   
   const monthlyVibe = useMemo(() => {
-    if (completedEvents.length === 0) return { text: "No Data Yet 🌱", color: "#A8A29E" };
+    console.log('Calculating monthlyVibe, completedEvents.length:', completedEvents.length);
+    if (completedEvents.length === 0) {
+      console.log('No completed events, returning "No Data Yet"');
+      return { text: "No Data Yet 🌱", color: "#A8A29E" };
+    }
 
     const avgRating = completedEvents.reduce((acc, curr) => acc + (curr.rating || 0), 0) / completedEvents.length;
+    console.log('Average rating:', avgRating, 'from', completedEvents.map(e => e.rating));
 
     if (avgRating > 0.8) return { text: "Soulmates 💖", color: "#E11D48" };
     if (avgRating > 0.6) return { text: "In Sync ✨", color: "#DB2777" };
     if (avgRating > 0.4) return { text: "Growing 🌱", color: "#65A30D" };
     return { text: "Needs Love ☕️", color: "#D97706" };
-  }, [events, completedEvents]);
+  }, [completedEvents.length, completedEvents]);
 
   useEffect(() => {
     scale.value = withRepeat(

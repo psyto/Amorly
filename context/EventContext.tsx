@@ -54,9 +54,29 @@ export function EventProvider({ children }: { children: ReactNode }) {
     };
 
     const rateEvent = (id: string, rating: number, matchResult: string) => {
-        setEvents(prev => prev.map(e =>
-            e.id === id ? { ...e, status: 'completed', rating, matchResult } : e
-        ));
+        console.log('=== rateEvent called ===', { id, rating, matchResult });
+        setEvents(prev => {
+            const updated = prev.map(e => {
+                if (e.id === id) {
+                    const updatedEvent = { ...e, status: 'completed' as const, rating, matchResult };
+                    console.log('Updating event:', { 
+                        before: { id: e.id, status: e.status, rating: e.rating }, 
+                        after: updatedEvent 
+                    });
+                    return updatedEvent;
+                }
+                return e;
+            });
+            console.log('=== Events after rateEvent ===');
+            console.log('Total events:', updated.length);
+            console.log('Completed events:', updated.filter(e => e.status === 'completed').map(e => ({ 
+                id: e.id, 
+                status: e.status, 
+                rating: e.rating, 
+                matchResult: e.matchResult 
+            })));
+            return updated;
+        });
     };
 
     const saveDraftRating = (id: string, rating: number, matchResult: string) => {

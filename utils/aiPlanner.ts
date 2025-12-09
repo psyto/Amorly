@@ -1,7 +1,7 @@
 
 import { Event } from '@/context/EventContext';
-import { RestaurantData } from './types';
-import { searchRestaurantsByEmotion } from './restaurantAPI';
+import { PlaceData } from './types';
+import { searchPlacesByEmotion } from './restaurantAPI';
 
 export type MoodType = 'Energized' | 'Relaxed' | 'Romantic' | 'Adventurous' | 'Playful' | 'Cozy';
 export type InterestType = 'Food' | 'Nature' | 'Art' | 'Active' | 'Music' | 'Nightlife';
@@ -13,10 +13,13 @@ export interface DatePlan {
     tags: string[];
     description: string;
     category: InterestType;
-    // レストラン情報（Foodカテゴリの場合）
-    restaurantOptions?: RestaurantData[];
-    selectedRestaurant?: RestaurantData;
+    // 場所情報（全カテゴリ対応）
+    placeOptions?: PlaceData[];
+    selectedPlace?: PlaceData;
     emotionValue?: number;
+    // 後方互換性のため
+    restaurantOptions?: PlaceData[];
+    selectedRestaurant?: PlaceData;
 }
 
 // Helper to get random item from array
@@ -392,60 +395,53 @@ export const generateMonthlyPlan = async (
     const topPool = candidates.slice(0, Math.max(count, 12)); // larger pool
     const selected = shuffle(topPool).slice(0, count);
 
-    // プラン生成後、Foodカテゴリのプランに対してレストラン検索
-    const plansWithRestaurants = await Promise.all(
+    // プラン生成後、全カテゴリに対して場所検索
+    const plansWithPlaces = await Promise.all(
         selected.map(async (plan, index) => {
             const planTitle = `Date ${index + 1}: ${plan.title.split(":")[0].trim()}`;
             
-            // Foodカテゴリの場合のみレストラン検索
-            if (plan.category === 'Food') {
-                // cityが設定されていない場合はデフォルト値を使用
-                const searchCity = context.city || 'San Francisco';
-                
-                try {
-                    // プランの予算から感情評価値を逆算
-                    const planBudget = parseFloat(plan.cost.replace(/[^0-9.]/g, '')) || avgBudgetPerDate;
-                    const emotionValue = budgetToEmotion(planBudget, avgBudgetPerDate);
-                    
-                    console.log('Searching restaurants for:', {
-                        category: plan.category,
-                        city: searchCity,
-                        budget: planBudget,
-                        emotionValue
-                    });
-                    
-                    // レストラン検索
-                    const restaurants = await searchRestaurantsByEmotion(
-                        emotionValue,
-                        planBudget,
-                        searchCity,
-                        'Food',
-                        context.pastEvents,
-                        context.mood
-                    );
-                    
-                    console.log('Found restaurants:', restaurants.length);
-                    
-                    return {
-                        ...plan,
-                        title: planTitle,
-                        restaurantOptions: restaurants.length > 0 ? restaurants : undefined,
-                        emotionValue
-                    };
-                } catch (error) {
-                    console.error('Error searching restaurants:', error);
-                    // エラーが発生してもプランは返す（レストラン情報なし）
-                    return {
-                        ...plan,
-                        title: planTitle
-                    };
-                }
-            }
+            // cityが設定されていない場合はデフォルト値を使用
+            const searchCity = context.city || 'San Francisco';
             
-            return {
-                ...plan,
-                title: planTitle
-            };
+            try {
+                // プランの予算から感情評価値を逆算
+                const planBudget = parseFloat(plan.cost.replace(/[^0-9.]/g, '')) || avgBudgetPerDate;
+                const emotionValue = budgetToEmotion(planBudget, avgBudgetPerDate);
+                
+                console.log('Searching places for:', {
+                    category: plan.category,
+                    city: searchCity,
+                    budget: planBudget,
+                    emotionValue
+                });
+                
+                // 全カテゴリに対して場所検索
+                const places = await searchPlacesByEmotion(
+                    emotionValue,
+                    planBudget,
+                    searchCity,
+                    plan.category,
+                    context.pastEvents,
+                    context.mood
+                );
+                
+                console.log(`Found ${plan.category} places:`, places.length);
+                
+                return {
+                    ...plan,
+                    title: planTitle,
+                    placeOptions: places.length > 0 ? places : undefined,
+                    restaurantOptions: places.length > 0 ? places : undefined, // 後方互換性
+                    emotionValue
+                };
+            } catch (error) {
+                console.error(`Error searching ${plan.category} places:`, error);
+                // エラーが発生してもプランは返す（場所情報なし）
+                return {
+                    ...plan,
+                    title: planTitle
+                };
+            }
         })
     );
 

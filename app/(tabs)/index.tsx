@@ -8,7 +8,7 @@ import { Pressable, StyleSheet } from 'react-native';
 
 export default function TabOneScreen() {
   // Emma Hart Design: Clean, Minimal, Warm.
-  const { getPendingReviewEvent, getNextScheduledEvent, rateEvent, saveDraftRating, startReview } = useEvent();
+  const { getPendingReviewEvent, getNextScheduledEvent, rateEvent, saveDraftRating, startReview, events } = useEvent();
   const [partnerValue, setPartnerValue] = useState<number | null>(null);
   const [statusText, setStatusText] = useState("Was it worth it?");
   const [isResultVisible, setIsResultVisible] = useState(false);
@@ -16,10 +16,22 @@ export default function TabOneScreen() {
   const timerRef = useRef<any>(null);
 
   // Logic: Show Pending Review first. If none, show Next Scheduled info.
-  // Logic: Show Pending Review first. If none, show Next Scheduled info.
+  // Recalculate when events change to ensure reactivity
   const activeEvent = getPendingReviewEvent();
   const nextEvent = getNextScheduledEvent();
   const displayEvent = activeEvent || nextEvent;
+  
+  // Debug: Log events for troubleshooting
+  useEffect(() => {
+    console.log('Events in Home screen:', {
+      total: events.length,
+      pendingReview: events.filter(e => e.status === 'pending_review').length,
+      scheduled: events.filter(e => e.status === 'scheduled').length,
+      completed: events.filter(e => e.status === 'completed').length,
+      activeEventId: activeEvent?.id,
+      nextEventId: nextEvent?.id
+    });
+  }, [events, activeEvent?.id, nextEvent?.id]);
 
   // Debugging: Reset state when activeEvent changes (e.g. user toggles between events or finishes one)
   // This ensures the slider is re-enabled for the new event.
@@ -84,7 +96,23 @@ export default function TabOneScreen() {
 
   const handleCollectMemory = () => {
     if (!activeEvent) return;
-    rateEvent(activeEvent.id, userRating, statusText); // Save logic
+    
+    // Save the rating and mark as completed
+    rateEvent(activeEvent.id, userRating, statusText);
+    
+    // Find the next scheduled event BEFORE state update
+    // We need to get it from the current events array, not the function
+    const currentScheduledEvents = events.filter(e => e.status === 'scheduled');
+    const nextScheduledEvent = currentScheduledEvents[0]; // Get the first scheduled event
+    
+    // Automatically start review for the next scheduled event
+    if (nextScheduledEvent) {
+      console.log('Auto-starting review for next event:', nextScheduledEvent.id);
+      // Use setTimeout to ensure rateEvent state update completes first
+      setTimeout(() => {
+        startReview(nextScheduledEvent.id);
+      }, 50);
+    }
 
     // Reset State
     setIsResultVisible(false);
