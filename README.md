@@ -22,8 +22,8 @@
 
 1.  Clone the repository:
     ```bash
-    git clone https://github.com/yourusername/amorly.git
-    cd amorly
+    git clone https://github.com/psyto/Amorly.git
+    cd Amorly
     ```
 
 2.  Install dependencies:
